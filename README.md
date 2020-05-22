@@ -1,2 +1,2 @@
-# mana-product-categories
- Add product categories to ManaCMS
+# mana-categories
+Add Product Categories to ManaCMS
