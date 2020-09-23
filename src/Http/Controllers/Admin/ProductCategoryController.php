@@ -9,7 +9,7 @@
     use ManaCMS\ManaProductCategories\Models\ProductCategory;
     use Illuminate\Http\Request;
 
-    class CategoryController extends Controller
+    class ProductCategoryController extends Controller
     {
         /**
          * Display a listing of the resource.
@@ -19,7 +19,7 @@
         public function index()
         {
             $categories = ProductCategory::whereNull('parent_id')->with('moreChilds')->get()->keyBy('id');
-            return view('categories::admin.index',compact('categories'));
+            return view('ProductCategories::admin.index',compact('categories'));
         }
 
         /**
@@ -30,7 +30,7 @@
         public function create()
         {
             $categories = ProductCategory::whereNull('parent_id')->with('moreChilds')->get()->keyBy('id');
-            return view('categories::admin.create',compact('categories'));
+            return view('ProductCategories::admin.create',compact('categories'));
         }
 
         /**
@@ -56,7 +56,7 @@
                 'title' => $request->title,
                 'desc' => $request->description,
             ]);
-            return redirect()->route('manage.category.index')->with('success',"دسته بندی «{$request->title}» با موفقیت ایجاد شد.")->with('title','تبریک!');
+            return redirect()->route('manage.productcategory.index')->with('success',"دسته بندی «{$request->title}» با موفقیت ایجاد شد.")->with('title','تبریک!');
 
         }
 
@@ -78,10 +78,12 @@
          * @param  \App\Models\Category  $category
          * @return \Illuminate\Http\Response
          */
-        public function edit(ProductCategory $category)
+        public function edit($productCategory)
         {
-            $categories = ProductCategory::whereNull('parent_id')->with('childs.childs')->get()->keyBy('id');
-            return view('categories::admin.create',compact('category','categories'));
+            $category = ProductCategory::whereSlug($productCategory)->first();
+            $categories = ProductCategory::whereNull('parent_id')->with('moreChilds')->get()->keyBy('id');
+            $categories = $categories->except($category->id);
+            return view('ProductCategories::admin.create',compact('category','categories'));
         }
 
         /**
@@ -91,23 +93,32 @@
          * @param  \App\Models\Category  $category
          * @return \Illuminate\Http\RedirectResponse
          */
-        public function update(StoreProductCategory $request, ProductCategory $category)
+        public function update(StoreProductCategory $request, $productCategory)
         {
-            $request->validate([
-                'title' => 'required|string|max:191',
-                'title_en' => 'required|string|max:191',
-                'slug' => 'required|string|max:50',
-                'expert' => 'nullable|string',
-                'expert_en' => 'nullable|string',
-            ]);
+            $request = json_decode(json_encode($request->validated()));
+            $category = ProductCategory::whereSlug($productCategory)->first();
+            if ($request->parent == 'noparent') {
+                list($request->parent, $request->level) = [null,0];
+            }
+            else {
+                list($request->parent, $request->level) = explode('#',$request->parent);
+                $request->level += 1;
+            }
 
             $category->title = $request->title;
-            $category->title_en = $request->title_en;
+            $category->parent_id = $request->parent;
+            $category->level = $request->level;
             $category->slug = $request->slug;
-            $category->expert = $request->expert;
-            $category->expert_en = $request->expert_en;
-            $category->save();
-            return redirect()->route('manage.category.index')->with('success',"دسته بندی «{$request->title}» با موفقیت بروزرسانی شد.")->with('title','تبریک!');
+            $category->desc = $request->description;
+            if ($category->isDirty()) {
+                $category->save();
+                return redirect()->route('manage.productcategory.index')->with('success',"دسته بندی «{$request->title}» با موفقیت بروزرسانی شد.")->with('title','تبریک!');
+            }
+            return redirect()->route('manage.productcategory.index')
+                ->with([
+                    'title'=>'متاسفیم!',
+                    'error'=>"دسته بندی «{$request->title}» با موفقیت بروزرسانی نشد و چیزی برای بروزرسانی وجود نداشت.",
+                ]);
         }
 
         /**
@@ -116,9 +127,10 @@
          * @param  \App\Models\Category  $category
          * @return \Illuminate\Http\RedirectResponse
          */
-        public function destroy(ProductCategory $category)
+        public function destroy($productCategory)
         {
-            ProductCategorizable::where('category_id',$category->id)->delete();
+            $category = ProductCategory::whereSlug($productCategory)->first();
+            ProductCategorizable::where('product_category_id',$category->id)->delete();
             $category->delete();
             return back()->with('success',"دسته بندی «{$category->title}» با موفقیت حذف شد.")->with('title','حذف موفقیت آمیز!');
         }

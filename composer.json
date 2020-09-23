@@ -9,8 +9,9 @@
         }
     ],
     "require": {
-        "illuminate/support": "*"
-	},
+        "illuminate/support": "*",
+        "maatwebsite/excel": "^3.1"
+    },
     "autoload": {
         "psr-4": {
             "ManaCMS\\ManaProductCategories\\": "src/"

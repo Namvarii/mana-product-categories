@@ -1,18 +1,19 @@
 @extends('admin.layout.master')
-@section('title', request()->route()->named('manage.category.edit') ? trans('categories::categories.edit.title').' '.$category->name : trans('categories::categories.add.title') )
+@section('title', request()->route()->named('manage.productcategory.edit') ? trans('ProductCategories::categories.edit.title').' '.$category->name : trans('ProductCategories::categories.add.title') )
 @section('content')
     <section class="content Namvarii">
         <div class="row">
             <div class="col-md-12">
                 <div class="card card-outline card-info Namvarii">
                     <div class="card-header">
-                        <h3 class="card-title">دسته بندی های اخبار : <small>@yield('title')</small></h3><!-- tools box -->
+                        <h3 class="card-title">دسته بندی های محصولات : <small>@yield('title')</small></h3><!-- tools box -->
                     </div><!-- /.card-header -->
-                    @if(request()->route()->named('manage.category.edit'))
-                        <form id="createPost" method="POST" action="{{ route('manage.category.update',$category) }}">
+                    @if(request()->route()->named('manage.productcategory.edit'))
+                        <form id="createPost" method="POST" action="{{ route('manage.productcategory.update',$category) }}">
                             @method('PATCH')
+                            <input type="hidden" name="old_category_id" value="{{ $category->id }}">
                     @else
-                        <form id="createPost" method="POST" action="{{ route('manage.category.store') }}">
+                        <form id="createPost" method="POST" action="{{ route('manage.productcategory.store') }}">
                     @endif
                         @csrf
                         <div class="card-body pad">
@@ -25,7 +26,7 @@
                                     <select name="parent" id="parent" class="form-control select2 select2-danger" data-dropdown-css-class="select2-danger" style="width: 100%;">
                                         <option value="noparent">بدون والد</option>
                                         @if($categories->count() > 0)
-                                            @include('categories::admin.categories',compact('categories'))
+                                            @include('ProductCategories::admin.categories',compact('categories'))
                                         @endif
                                     </select>
                                 </div>

@@ -23,9 +23,17 @@ class StoreProductCategory extends FormRequest
      */
     public function rules()
     {
+        if ($this->get('_method') == 'PATCH') {
+            return [
+                'title' => 'required|string|max:191',
+                'slug' => 'required|string|max:100|unique:productcategories,slug,'.$this->get('old_category_id'),
+                'description' => 'required|string',
+                'parent' => 'required',
+            ];
+        }
         return [
             'title' => 'required|string|max:191',
-            'slug' => 'required|unique:categories|string|max:100',
+            'slug' => 'required|unique:productcategories|string|max:100',
             'description' => 'required|string',
             'parent' => 'required',
         ];
